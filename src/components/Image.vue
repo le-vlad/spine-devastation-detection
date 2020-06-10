@@ -28,13 +28,15 @@
     },
     methods: {
       drawResult() {
-        console.log('DRaw line');
         const cv = this.$refs.canvPreview;
         const context = cv.getContext('2d');
         context.fillStyle = 'green';
         this.array.map((point) => {
           context.fillRect(point.x, point.y, 5, 5);
-        })
+        });
+
+        const imageBase64 = cv.toDataURL('image/jpeg', 1.0);
+        this.$emit('detectedImage', imageBase64);
       },
       initGoLang() {
         if (!WebAssembly.instantiateStreaming) {
