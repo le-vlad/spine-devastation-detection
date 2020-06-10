@@ -1,58 +1,100 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+    <section>
+      <ImagePreview :array="arrayToDraw" v-if="infraRedFile" @onArray="onArrayData" :type="'i'" :data="infraRedFile"></ImagePreview>
+      <ImagePicker @filePicked="onInfraredPicked" :type="'x'" text="Pick Infra-red image"></ImagePicker>
+    </section>
+    <section></section>
+    <section>
+      <ImagePreview v-if="xRayFile" @onArray="onArrayData" :type="'x'" :data="xRayFile"></ImagePreview>
+      <ImagePicker @filePicked="onXRayPicked" text="Pick x-ray image"></ImagePicker>
+    </section>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
+  import ImagePicker from "@/components/ImagePicker";
+  import Image from "@/components/Image";
+
+  export default {
+    name: 'HelloWorld',
+    components: {
+      ImagePreview: Image,
+      ImagePicker,
+    },
+    data() {
+      return {
+        xRayFile: null,
+        infraRedFile: null,
+        xRayArray: null,
+        infraRedArray: null,
+        mergedArray: [],
+        arrayToDraw: null,
+      };
+    },
+    props: {
+      msg: String
+    },
+    methods: {
+      onArrayData({array, type}) {
+        if (type === 'x') {
+          this.xRayArray = JSON.parse(array);
+          let max = 0;
+          for (let i = 0; i < this.xRayArray.length; i += 1) {
+            let arrayMax = Math.max(...this.xRayArray[i]);
+            max = arrayMax > max ? arrayMax : max;
+          }
+
+          console.log(max);
+          for (let i = 0; i < this.xRayArray.length; i += 1) {
+            for (let j = 0; j < this.xRayArray[i].length; j += 1) {
+              this.xRayArray[i][j] = this.xRayArray[i][j] / max;
+            }
+          }
+        } else {
+          this.infraRedArray = JSON.parse(array);
+        }
+
+        if (this.xRayArray && this.infraRedArray) {
+          this.mergeArrays();
+        }
+      },
+      mergeArrays() {
+        const arrayToDraw = [];
+        for (let i = 0; i <= this.infraRedArray.length - 1; i += 1) {
+          this.mergedArray[i] = [];
+          for (let j = 0; j <= this.xRayArray[i].length - 1; j += 1) {
+            this.mergedArray[i][j] = this.infraRedArray[i][j] * this.xRayArray[i][j];
+            if (this.infraRedArray[i][j] > 0.98 && this.infraRedArray[i][j] <= 1) {
+              arrayToDraw.push({
+                x: i,
+                y: j,
+              });
+            }
+            window.arr = this.mergedArray;
+
+          }
+        }
+        this.arrayToDraw = arrayToDraw;
+      },
+      onInfraredPicked(file) {
+        console.log(file, 'infrared');
+        this.infraRedFile = file;
+      },
+      onXRayPicked(file) {
+        this.xRayFile = file;
+        console.log(file, 'xray');
+      },
+    },
   }
-}
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+
+<style>
+  .hello {
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr;
+    width: 700px;
+    margin: 0 auto;
+  }
 </style>
