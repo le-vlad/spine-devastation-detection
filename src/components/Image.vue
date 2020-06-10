@@ -31,9 +31,37 @@
         const cv = this.$refs.canvPreview;
         const context = cv.getContext('2d');
         context.fillStyle = 'green';
+
+        const shape = {
+          maxY: 0,
+          maxX: 0,
+          minX: 10000000,
+          minY: 10000000,
+        };
+
         this.array.map((point) => {
-          context.fillRect(point.x, point.y, 5, 5);
+          if (shape.maxX <= point.x) {
+            shape.maxX = point.x;
+          }
+
+          if (point.x < shape.minX) {
+            shape.minX = point.x;
+          }
+
+          if (point.y < shape.minY) {
+            shape.minY = point.y;
+          }
+
+          if (shape.maxY <= point.y) {
+            shape.maxY = point.y;
+          }
         });
+
+        context.beginPath();
+        context.lineWidth = "6";
+        context.strokeStyle = "green";
+        context.rect(shape.minX - 30, shape.minY - 30, 90, 130);
+        context.stroke();
 
         const imageBase64 = cv.toDataURL('image/jpeg', 1.0);
         this.$emit('detectedImage', imageBase64);

@@ -12,10 +12,18 @@
   </div>
 
   <div class="report" v-else>
-    <h1>Analysis report</h1>
-    <img :src="imageBase64" alt="Reported image">
+    <div>
+      <h1>Analysis report</h1>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto excepturi hic illum iste, molestias omnis perspiciatis quae quia unde voluptatibus?
+      </p>
+      <img :src="imageBase64" alt="Reported image">
+    </div>
 
-    <div class="plot" id="plot">
+    <div class="div">
+      <h1>Plot</h1>
+      <div class="plot" id="plot">
+    </div>
 
     </div>
   </div>
@@ -132,5 +140,10 @@
     grid-template-columns: 2fr 1fr 2fr;
     width: 700px;
     margin: 0 auto;
+  }
+
+  .report {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
   }
 </style>
