@@ -11,27 +11,49 @@
       data: File,
       type: String,
       array: Array,
+      asPoints: Boolean,
     },
     name: "ImagePreview",
     data() {
       return {
         loaded: false,
         MAX_IMAGE_HEIGHT: 620,
+        context: null,
+        defaultCanvasState: null,
       }
     },
     watch: {
       array(v) {
         if (v !== null) {
+          this.$refs.canvPreview.getContext('2d').restore();
           this.drawResult();
         }
       }
     },
     methods: {
+      drawDefaultState() {
+        return new Promise((resolve) => {
+          const destinationImage = new Image();
+          const self = this;
+          destinationImage.onload = function () {
+            const cv = self.$refs.canvPreview;
+            const context = cv.getContext('2d');
+            console.log('draw default state');
+            context.drawImage(destinationImage, 0, 0);
+            resolve();
+          };
+          destinationImage.src = this.defaultCanvasState;
+        })
+      },
       drawResult() {
         const cv = this.$refs.canvPreview;
         const context = cv.getContext('2d');
-        context.fillStyle = 'green';
-
+        context.fillStyle = 'black';
+        if (this.defaultCanvasState) {
+          this.drawDefaultState();
+        } else {
+          this.defaultCanvasState = cv.toDataURL("image/png");
+        }
         const shape = {
           maxY: 0,
           maxX: 0,
@@ -40,6 +62,9 @@
         };
 
         this.array.map((point) => {
+          if (this.asPoints) {
+            context.fillRect(point.x, point.y, 1, 1);
+          }
           if (shape.maxX <= point.x) {
             shape.maxX = point.x;
           }
@@ -57,12 +82,13 @@
           }
         });
 
-        context.beginPath();
-        context.lineWidth = "6";
-        context.strokeStyle = "green";
-        context.rect(shape.minX - 30, shape.minY - 30, 90, 130);
-        context.stroke();
-
+        if (!this.asPoints) {
+          context.beginPath();
+          context.lineWidth = "6";
+          context.strokeStyle = "green";
+          context.rect(shape.minX - 30, shape.minY - 30, 90, 130);
+          context.stroke();
+        }
         const imageBase64 = cv.toDataURL('image/jpeg', 1.0);
         this.$emit('detectedImage', imageBase64);
       },
@@ -121,7 +147,7 @@
         jsonWorker.onmessage = message => {
           const result = window.pixelCalc(message.data);
           console.log(JSON.parse(result).length);
-          this.$emit('onArray', { type: this.type, array: result, });
+          this.$emit('onArray', {type: this.type, array: result,});
           jsonWorker.terminate();
         };
 
